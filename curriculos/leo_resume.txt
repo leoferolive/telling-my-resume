@@ -1,3 +1,0 @@
-{
-    "content": "Este é o conteúdo do meu currículo..."
-}

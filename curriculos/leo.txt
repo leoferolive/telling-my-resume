@@ -1,0 +1,31 @@
+EXPERIÊNCIA PROFISSIONAL
+ Junho/2019 – Agosto 2024
+Empresa: Ebix América Latina.
+Cargo: Analista de Sistemas Sr.
+Principais Atividades: Análise e soluções de problemas no ambiente de produção, soluções de demandas, manutenção corretiva e evolutiva, além de, participar de reuniões para tomadas de decisão de alguns projetos para a área de Sinistros de Ramos Elementares – Bradesco Seguros.
+Tecnologias utilizadas: Java 7/8, Struts 2, Springboot, EJB, jQuery, JasperReport, RAD, WebSphere 8/9, Tomcat, RESTFul, SQL Server, DB2, Bitbucket, SONAR, Jenkins.
+ Outubro/2018 – Maio/2019
+Empresa: Lumis.
+Cargo: Analista de Sistemas Pl.
+Principais Atividades: De início entrei para desenvolver alguns micros serviços para equipe de Canais Internos na SulAmérica Seguros. Sendo que depois de um mês foi solicitado para que eu me tornasse membro permanente da equipe, desenvolvendo demandas principalmente para as áreas de Compliance, RH, Comercial e Financeiro.
+Tecnologias utilizadas: Java 8, Spring Boot, Openshift, Tomcat, Web services REST, Jenkins, SONAR, DB2, Oracle, Bitbucket.
+ Julho/2017 – Maio/2018
+Empresa: Ebix América Latina.
+Cargo: Analista de Sistemas Pl.
+Principais Atividades: Célula ágil salvados focada em atender a área de negócio de maneira totalmente focada em desenvolvimento ágil, focando em pequenas entregas que agregam valor para a área de Salvados da Bradesco Seguros.
+Tecnologias utilizadas: Java - JEE, Struts 2, Spring, EJB2, jQuery, JasperReport, RAD, WebSphere7, Tomcat, WebService, SQL Server, DB2.
+ Janeiro/2016 – Junho/2017
+Empresa: Persist Soluções de Informática.
+Cargo: Analista de Sistemas Jr.
+Principais Atividades: Análise e soluções de problemas no ambiente de produção, soluções de demandas, manutenção corretiva e evolutiva, além de, participar de reuniões para tomadas de decisão de alguns projetos para a área de Sinistros de Ramos Elementares – Bradesco Seguros.
+Tecnologias utilizadas: Java - JEE, Struts 2, Spring, EJB2, jQuery, JasperReport, RAD, WebSphere 7/8, Tomcat, WebService, SQL Server, DB2.
+ Setembro/2014 – Dezembro/2015
+Empresa: Capgemini.
+Cargo: Analista de Sistemas Jr.
+Principais Atividades: Análise e soluções de problemas no ambiente de produção, manutenção corretiva e evolutiva para os projetos da área de Sinistros de Ramos Elementares – Bradesco Seguros.
+Tecnologias utilizadas: JEE, Struts 2, Spring, EJB2, jQuery, JasperReport, RAD, WebSphere7, Tomcat, WebService, SQL Server, DB2.
+ Fevereiro/2014 – Agosto/2014
+Empresa: Capgemini.
+Cargo: Estagiário em Análise de Sistema (Java).
+Principais Atividades: Análise e desenvolvimento de sistemas, manutenção corretiva e evolutiva para o Projeto Fiança Locatícia – Bradesco Seguros.
+Tecnologias utilizadas: Eclipse, Spring, Struts 2, jQuery, Tomcat, DB2.
