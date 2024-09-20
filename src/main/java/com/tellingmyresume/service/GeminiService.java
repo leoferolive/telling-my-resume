@@ -55,15 +55,15 @@ public class GeminiService {
             // Executando a requisição POST e mapeando diretamente para a classe VO
             ResponseEntity<GeminiResponseVO> response = restTemplate.exchange(url, HttpMethod.POST, entity, GeminiResponseVO.class);
 
-            // Verificando a resposta e navegando até o texto gerado
-            GeminiResponseVO responseBody = response.getBody();
-            if (responseBody != null && !responseBody.getCandidates().isEmpty()) {
-                Candidate candidate = responseBody.getCandidates().get(0);
-                if (candidate.getContent() != null && !candidate.getContent().getParts().isEmpty()) {
-                    String generatedText = candidate.getContent().getParts().get(0).getText();
-                    return generatedText;
-                }
-            }
+            if (response != null) {
+            	GeminiResponseVO responseBody = response.getBody();
+            	if (responseBody != null && !responseBody.getCandidates().isEmpty()) {
+            		Candidate candidate = responseBody.getCandidates().get(0);
+            		if (candidate.getContent() != null && !candidate.getContent().getParts().isEmpty()) {
+            			return candidate.getContent().getParts().get(0).getText();
+            		}
+            	}
+			}
             throw new GeminiServiceException("A resposta da API do Gemini não contém dados suficientes.");
             
         } catch (GeminiServiceException e) {

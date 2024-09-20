@@ -45,4 +45,9 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
         }
     }
 	
+    // Método auxiliar para testes
+    void setBucketForTesting(String ipAddress, Bucket bucket) {
+        cache.put(ipAddress, bucket);
+    }
+    
 }

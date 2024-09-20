@@ -41,4 +41,9 @@ public class GlobalExceptionHandler {
     	LOGGER.error("Ocorreu um erro: ", ex);
     	return new ResponseEntity<>("Ocorreu um erro inesperado no sistema.", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
