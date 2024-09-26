@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class LocalStorage {
 
-    public static final String STORAGE_PATH = "curriculos/";
+    public static final String STORAGE_PATH = "resumes/";
 
     /**
      * Salva o arquivo enviado no diretório especificado.
@@ -33,4 +33,9 @@ public class LocalStorage {
         Path filePath = Paths.get(STORAGE_PATH + fileName);
         return Files.readAllBytes(filePath); // Retorna o conteúdo bruto do arquivo como bytes
     }
+
+    public boolean fileExists(String fileName) {
+        return Files.exists(Paths.get(STORAGE_PATH + fileName));
+    }
+    
 }
