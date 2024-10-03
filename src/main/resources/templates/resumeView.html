@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumo do Currículo</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Resumo do Currículo</h1>
+    <p th:utext="${resume}"></p>
+    
+    <h2>Pontos Fortes:</h2>
+    <ul>
+        <li th:each="strength : ${strengths}" th:text="${strength}"></li>
+    </ul>
+</body>
+</html>

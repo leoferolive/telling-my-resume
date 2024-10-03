@@ -1,9 +1,9 @@
 package com.tellingmyresume.service;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,62 +16,95 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.tellingmyresume.exception.GeminiServiceException;
+import com.tellingmyresume.formatter.ResumeFormatter;
 import com.tellingmyresume.vo.Candidate;
 import com.tellingmyresume.vo.GeminiResponseVO;
 
 @Service
 public class GeminiService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(GeminiService.class);
-	
-	private final RestTemplate restTemplate;
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeminiService.class);
 
-	@Value("${api.gemini.key}")
+    private static final String GEMINI_URL_TEMPLATE = 
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=";
+
+    @Value("${api.gemini.key}")
     private String apiKey;
-    
+
+    private final RestTemplate restTemplate;
+
     public GeminiService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public String generateResume(String resumeContent) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + apiKey;
+    /**
+     * Gera um currículo formatado como JSON com caracteres especiais limpos.
+     * 
+     * @param resumeContent O conteúdo do currículo a ser processado.
+     * @return O currículo formatado como JSON, com caracteres especiais limpos.
+     */
+    public String generateResumeAsJson(String resumeContent) {
+        return ResumeFormatter.cleanSpecialCharacters(generateResume(resumeContent));
+    }
 
-        // Criando o corpo da requisição
+    /**
+     * Gera o resumo do currículo formatado através da API Gemini.
+     * 
+     * @param resumeContent O conteúdo do currículo.
+     * @return O resumo do currículo processado pela API Gemini.
+     */
+    public String generateResume(String resumeContent) {
+        String url = GEMINI_URL_TEMPLATE + apiKey;
+
+        HttpEntity<Map<String, Object>> entity = createHttpEntity(resumeContent);
+
+        try {
+            ResponseEntity<GeminiResponseVO> response = restTemplate.exchange(url, HttpMethod.POST, entity, GeminiResponseVO.class);
+
+            return extractCandidateText(response)
+                    .orElseThrow(() -> new GeminiServiceException("A resposta da API do Gemini não contém dados suficientes."));
+
+        } catch (GeminiServiceException e) {
+            LOGGER.error("Erro específico da API Gemini: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            LOGGER.error("Erro inesperado ao chamar a API do Gemini: {}", e.getMessage(), e);
+            throw new GeminiServiceException("Erro ao gerar o currículo na API do Gemini.", e);
+        }
+    }
+
+    /**
+     * Cria o corpo da requisição HTTP, incluindo os cabeçalhos e o conteúdo do currículo.
+     * 
+     * @param resumeContent O conteúdo do currículo.
+     * @return O HttpEntity configurado com o corpo da requisição.
+     */
+    private HttpEntity<Map<String, Object>> createHttpEntity(String resumeContent) {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("contents", List.of(
             Map.of("parts", List.of(
-                Map.of("text", "resuma o currículo a seguir: " + resumeContent)
+                Map.of("text", "Descreva o currículo a seguir para uma oferta de trabalho de maneira a valorizar o mesmo: " + resumeContent)
             ))
         ));
 
-        // Configurando os cabeçalhos
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
 
-        // Enviando a requisição com o corpo e cabeçalhos
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        
-        try {
-            // Executando a requisição POST e mapeando diretamente para a classe VO
-            ResponseEntity<GeminiResponseVO> response = restTemplate.exchange(url, HttpMethod.POST, entity, GeminiResponseVO.class);
+        return new HttpEntity<>(requestBody, headers);
+    }
 
-            if (response != null) {
-            	GeminiResponseVO responseBody = response.getBody();
-            	if (responseBody != null && !responseBody.getCandidates().isEmpty()) {
-            		Candidate candidate = responseBody.getCandidates().get(0);
-            		if (candidate.getContent() != null && !candidate.getContent().getParts().isEmpty()) {
-            			return candidate.getContent().getParts().get(0).getText();
-            		}
-            	}
-			}
-            throw new GeminiServiceException("A resposta da API do Gemini não contém dados suficientes.");
-            
-        } catch (GeminiServiceException e) {
-            throw e;  // Repassa exceções específicas da API do Gemini
-        } catch (Exception e) {
-            // Encapsula qualquer outra exceção como uma GeminiServiceException
-        	LOGGER.error("Error ao gerar resposta: {}", Arrays.toString(e.getStackTrace()));
-        	throw new GeminiServiceException("Erro ao gerar o currículo na API do Gemini.", e);
-        }
+    /**
+     * Extrai o texto do candidato da resposta da API do Gemini.
+     * 
+     * @param response A resposta da API do Gemini.
+     * @return O texto do candidato, se presente, encapsulado em um Optional.
+     */
+    private Optional<String> extractCandidateText(ResponseEntity<GeminiResponseVO> response) {
+        return Optional.ofNullable(response)
+                .map(ResponseEntity::getBody)
+                .flatMap(body -> body.getCandidates().stream().findFirst())
+                .map(Candidate::getContent)
+                .flatMap(content -> content.getParts().stream().findFirst())
+                .map(part -> part.getText());
     }
 }

@@ -82,15 +82,16 @@ public class ResumeController {
     })
     @GetMapping("/generate/{fileName}")
     public ResponseEntity<String> generateResume(@Parameter(description = "Nome do arquivo do currículo") 
-                                                 @PathVariable String fileName) {
-        try {
-            String resumeContent = resumeService.readResume(fileName);
-            String generatedResume = geminiService.generateResume(resumeContent);
-            return ResponseEntity.status(HttpStatus.OK).body(generatedResume);
-        } catch (ResumeNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Currículo não encontrado: " + fileName);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao gerar o currículo: " + e.getMessage());
-        }
-    }
+	@PathVariable String fileName) {
+		try {
+			String resumeContent = resumeService.readResume(fileName);
+			String generatedResume = geminiService.generateResume(resumeContent);
+			return ResponseEntity.status(HttpStatus.OK).body(generatedResume);
+		} catch (ResumeNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Currículo não encontrado: " + fileName);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Erro ao gerar o currículo: " + e.getMessage());
+		}
+	}
 }
