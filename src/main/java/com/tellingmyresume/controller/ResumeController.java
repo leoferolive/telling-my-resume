@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.tellingmyresume.exception.ResumeNotFoundException;
 import com.tellingmyresume.exception.ResumeStorageException;
+import com.tellingmyresume.service.ClaudeService;
 import com.tellingmyresume.service.GeminiService;
 import com.tellingmyresume.service.ResumeService;
 
@@ -32,10 +33,12 @@ public class ResumeController {
 
     private final ResumeService resumeService;
     private final GeminiService geminiService;
-
-    public ResumeController(ResumeService resumeService, GeminiService geminiService) {
+    private final ClaudeService claudeService;
+    
+    public ResumeController(ResumeService resumeService, GeminiService geminiService, ClaudeService claudeService) {
         this.resumeService = resumeService;
         this.geminiService = geminiService;
+        this.claudeService = claudeService;
     }
     
     @Operation(
@@ -94,4 +97,26 @@ public class ResumeController {
 					.body("Erro ao gerar o currículo: " + e.getMessage());
 		}
 	}
+    
+    @Operation(summary = "Gera um novo resumo do currículo usando o Claude", description = "Gera uma nova versão de um currículo utilizando o modelo Claude")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Resumo gerado com sucesso",
+                     content = @Content(examples = @ExampleObject(value = "{\"mensagem\": \"Resumo gerado com sucesso!\"}"))),
+        @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
+    })
+    @GetMapping("/generateClaude/{fileName}")
+    public ResponseEntity<String> generateResumeWithClaude(@Parameter(description = "Nome do arquivo do currículo") 
+                                                           @PathVariable String fileName) {
+        try {
+            String resumeContent = resumeService.readResume(fileName);
+            String generatedResume = claudeService.generateResume(resumeContent);
+            return ResponseEntity.status(HttpStatus.OK).body(generatedResume);
+        } catch (ResumeNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Currículo não encontrado: " + fileName);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao gerar o resumo com Claude: " + e.getMessage());
+        }
+    }
+    
 }

@@ -20,6 +20,8 @@ import com.tellingmyresume.formatter.ResumeFormatter;
 import com.tellingmyresume.vo.Candidate;
 import com.tellingmyresume.vo.GeminiResponseVO;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Service
 public class GeminiService {
 
@@ -49,10 +51,12 @@ public class GeminiService {
 
     /**
      * Gera o resumo do currículo formatado através da API Gemini.
+     * Adicionamos lógica de Retry para tentar várias vezes em caso de falhas.
      * 
      * @param resumeContent O conteúdo do currículo.
      * @return O resumo do currículo processado pela API Gemini.
      */
+    @Retry(name = "geminiService", fallbackMethod = "fallbackGenerateResume")
     public String generateResume(String resumeContent) {
         String url = GEMINI_URL_TEMPLATE + apiKey;
 
@@ -71,6 +75,18 @@ public class GeminiService {
             LOGGER.error("Erro inesperado ao chamar a API do Gemini: {}", e.getMessage(), e);
             throw new GeminiServiceException("Erro ao gerar o currículo na API do Gemini.", e);
         }
+    }
+
+    /**
+     * Método de fallback que será chamado se todas as tentativas de retry falharem.
+     * 
+     * @param resumeContent O conteúdo do currículo.
+     * @param ex A exceção que causou a falha.
+     * @return Uma mensagem de fallback padrão ou uma ação alternativa.
+     */
+    public String fallbackGenerateResume(String resumeContent, Exception ex) {
+        LOGGER.error("Falha ao gerar currículo pela API do Gemini. Executando fallback. Motivo: {}", ex.getMessage());
+        return "Não foi possível gerar o resumo no momento. Tente novamente mais tarde.";
     }
 
     /**
