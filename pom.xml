@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.3</version>
+		<version>3.2.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.telling-my-resume</groupId>
@@ -14,9 +14,6 @@
 	<name>telling-my-resume</name>
 	<description>telling-my-resume</description>
 	<url/>
-	<licenses>
-		<license/>
-	</licenses>
 	<developers>
 		<developer/>
 	</developers>
@@ -28,7 +25,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<spring-ai.version>1.0.0-M3</spring-ai.version>
+		<spring-ai.version>1.0.0-SNAPSHOT</spring-ai.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -53,12 +50,17 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>	    
-	    
+		</dependency>
+
+		<!-- Spring AI -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-anthropic</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-anthropic-spring-boot-starter</artifactId>
-		</dependency>	    
+		</dependency>
 	    	
 	    <dependency>
 	        <groupId>nz.net.ultraq.thymeleaf</groupId>
@@ -69,14 +71,12 @@
 	        <artifactId>spring-boot-starter-test</artifactId>
 	        <scope>test</scope>
 	        <exclusions>
-	            <!-- Excluindo Mockito-core para adicionar a versão Mockito-JUnit -->
 	            <exclusion>
 	                <groupId>org.mockito</groupId>
 	                <artifactId>mockito-core</artifactId>
 	            </exclusion>
 	        </exclusions>
 	    </dependency>
-	    <!-- Mockito com JUnit 5 -->
 	    <dependency>
 	        <groupId>org.mockito</groupId>
 	        <artifactId>mockito-junit-jupiter</artifactId>
@@ -109,7 +109,7 @@
 		<dependency>
 		    <groupId>org.apache.poi</groupId>
 		    <artifactId>poi</artifactId>
-		    <version>5.2.3</version>
+		    <version>5.3.0</version>
 		</dependency>
 		
 		<dependency>
@@ -117,8 +117,7 @@
 		    <artifactId>poi-ooxml</artifactId>
 		    <version>5.2.3</version>
 		</dependency>
-		
-		
+				
 	</dependencies>
 
 	<dependencyManagement>
@@ -143,6 +142,14 @@
 	</build>
 	<repositories>
 		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+		<repository>
 			<id>spring-milestones</id>
 			<name>Spring Milestones</name>
 			<url>https://repo.spring.io/milestone</url>
@@ -151,4 +158,23 @@
 			</snapshots>
 		</repository>
 	</repositories>
+	
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+		<pluginRepository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
