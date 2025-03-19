@@ -37,7 +37,7 @@ public class ClaudeService {
 			ChatResponse chatResponse = chatModel.call(prompt); 
 			LOGGER.error(chatResponse.getResult().getOutput().getMessageType().toString());
 			
-			return chatResponse.getResult().getOutput().getContent();
+			return chatResponse.getResult().getOutput().getText();
 		} catch (Exception e) {
 			throw new RuntimeException("Erro ao gerar resumo com Claude", e);
 		}
