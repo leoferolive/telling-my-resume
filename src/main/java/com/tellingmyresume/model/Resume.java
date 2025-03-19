@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 
 @Entity
 public class Resume {
@@ -23,6 +24,21 @@ public class Resume {
     private String token;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    private String fileName;
+    
+    private String contentType;
+    
+    @Lob
+    private byte[] content;
+    
+    public Resume() {}
+    
+    public Resume(String fileName, String contentType, byte[] content) {
+        this.fileName = fileName;
+        this.contentType = contentType;
+        this.content = content;
+    }
     
 	public Long getId() {
 		return id;
@@ -64,5 +80,28 @@ public class Resume {
 		this.createdAt = createdAt;
 	}
     
+    public String getFileName() {
+        return fileName;
+    }
+    
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+    
+    public String getContentType() {
+        return contentType;
+    }
+    
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+    
+    public byte[] getContent() {
+        return content;
+    }
+    
+    public void setContent(byte[] content) {
+        this.content = content;
+    }
 }
 
