@@ -1,0 +1,255 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-5678-9abc-123456789abc",
+		"name": "Telling My Resume API",
+		"description": "Collection for testing the Telling My Resume AI-powered resume analysis application",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Resume Management",
+			"item": [
+				{
+					"name": "Upload Resume",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/resume/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resume",
+								"upload"
+							]
+						},
+						"description": "Upload a resume file (PDF, DOCX, or TXT). The file will be stored in the H2 database."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Resume Content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/resume/read/{{fileName}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resume",
+								"read",
+								"{{fileName}}"
+							]
+						},
+						"description": "Read the raw content of a stored resume file. Returns the extracted text content."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing resume files (upload and read)"
+		},
+		{
+			"name": "AI Analysis",
+			"item": [
+				{
+					"name": "Generate Analysis with Gemini",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/resume/generate/{{fileName}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resume",
+								"generate",
+								"{{fileName}}"
+							]
+						},
+						"description": "Generate resume analysis using Google's Gemini AI model. Returns AI-generated insights highlighting strengths and technical competencies for IT positions."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Analysis with Claude",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/resume/generateClaude/{{fileName}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resume",
+								"generateClaude",
+								"{{fileName}}"
+							]
+						},
+						"description": "Generate resume analysis using Anthropic's Claude AI model. Returns AI-generated insights highlighting strengths and technical competencies for IT positions."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for AI-powered resume analysis using different models"
+		},
+		{
+			"name": "Web Interface",
+			"item": [
+				{
+					"name": "View Formatted Analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/resume/view/{{fileName}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resume",
+								"view",
+								"{{fileName}}"
+							]
+						},
+						"description": "View the formatted analysis results in a web page. Returns HTML with styled resume analysis."
+					},
+					"response": []
+				},
+				{
+					"name": "Home Page",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Access the main web interface for resume upload and management."
+					},
+					"response": []
+				}
+			],
+			"description": "Web interface endpoints for viewing results and accessing the UI"
+		},
+		{
+			"name": "API Documentation",
+			"item": [
+				{
+					"name": "Swagger UI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/swagger-ui.html",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"swagger-ui.html"
+							]
+						},
+						"description": "Access the interactive Swagger/OpenAPI documentation for all endpoints."
+					},
+					"response": []
+				},
+				{
+					"name": "API Docs JSON",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v3/api-docs",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v3",
+								"api-docs"
+							]
+						},
+						"description": "Get the OpenAPI specification in JSON format."
+					},
+					"response": []
+				}
+			],
+			"description": "API documentation and specification endpoints"
+		},
+		{
+			"name": "Database Console",
+			"item": [
+				{
+					"name": "H2 Database Console",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/h2-console",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"h2-console"
+							]
+						},
+						"description": "Access the H2 database console for debugging and data inspection. Use connection: jdbc:h2:file:./data/resumedb, username: sa, password: password"
+					},
+					"response": []
+				}
+			],
+			"description": "Database management and debugging endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "fileName",
+			"value": "resume.pdf",
+			"type": "string",
+			"description": "Nome do arquivo do currículo para ser usado nos endpoints"
+		}
+	]
+}
