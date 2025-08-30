@@ -1,5 +1,6 @@
 package com.tellingmyresume.config;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.anthropic.api.AnthropicApi;
@@ -8,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.support.RetryTemplate;
-import io.micrometer.observation.ObservationRegistry;
 
 @Configuration
 public class AIConfig {
@@ -23,10 +23,7 @@ public class AIConfig {
             .apiKey(anthropicApiKey)
             .build();
             
-        AnthropicChatOptions defaultOptions = AnthropicChatOptions.builder()
-            .build();
-        
-        // Create minimal required dependencies
+        AnthropicChatOptions defaultOptions = AnthropicChatOptions.builder().build();
         ToolCallingManager toolCallingManager = ToolCallingManager.builder().build();
         RetryTemplate retryTemplate = RetryTemplate.builder().maxAttempts(3).build();
         ObservationRegistry observationRegistry = ObservationRegistry.create();

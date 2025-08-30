@@ -7,8 +7,6 @@ import com.tellingmyresume.model.Resume;
 
 @Repository
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
-
-	public Resume findByToken(String token);	
 	
 	Resume findByFileName(String fileName);
 	boolean existsByFileName(String fileName);

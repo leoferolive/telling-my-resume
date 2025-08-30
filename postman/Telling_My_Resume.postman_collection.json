@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "12345678-1234-5678-9abc-123456789abc",
-		"name": "Telling My Resume API",
-		"description": "Collection for testing the Telling My Resume AI-powered resume analysis application",
+		"name": "Telling My Resume API v2.0",
+		"description": "Collection for testing the Telling My Resume AI-powered resume analysis application with Application Services architecture (Phase 3 complete)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -13,14 +13,27 @@
 					"name": "Upload Resume",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
 								{
 									"key": "file",
 									"type": "file",
-									"src": []
+									"src": [],
+									"description": "Resume file (PDF, DOCX, or TXT) - max 10MB"
+								},
+								{
+									"key": "customFileName",
+									"value": "",
+									"type": "text",
+									"description": "Optional: Custom filename (will use original if not provided)"
 								}
 							]
 						},
@@ -34,7 +47,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload a resume file (PDF, DOCX, or TXT). The file will be stored in the H2 database."
+						"description": "Upload a resume file using the Application Service layer. Supports PDF, DOCX, and TXT files with validation and proper error handling. Returns structured response with upload details."
 					},
 					"response": []
 				},
@@ -54,7 +67,7 @@
 								"{{fileName}}"
 							]
 						},
-						"description": "Read the raw content of a stored resume file. Returns the extracted text content."
+						"description": "Read the extracted text content from a stored resume file using the Application Service layer. Returns structured response with content metadata."
 					},
 					"response": []
 				}
@@ -64,6 +77,26 @@
 		{
 			"name": "AI Analysis",
 			"item": [
+				{
+					"name": "Smart Analysis (Best Available)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/resume/analyze/{{fileName}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resume",
+								"analyze",
+								"{{fileName}}"
+							]
+						},
+						"description": "🤖 NEW: Smart analysis using the best available AI provider. Automatically selects Claude or Gemini based on availability and fallbacks gracefully. Recommended endpoint for production use."
+					},
+					"response": []
+				},
 				{
 					"name": "Generate Analysis with Gemini",
 					"request": {
@@ -80,7 +113,7 @@
 								"{{fileName}}"
 							]
 						},
-						"description": "Generate resume analysis using Google's Gemini AI model. Returns AI-generated insights highlighting strengths and technical competencies for IT positions."
+						"description": "Generate resume analysis using Google's Gemini AI model specifically. Returns AI-generated insights highlighting strengths and technical competencies for IT positions."
 					},
 					"response": []
 				},
@@ -100,12 +133,96 @@
 								"{{fileName}}"
 							]
 						},
-						"description": "Generate resume analysis using Anthropic's Claude AI model. Returns AI-generated insights highlighting strengths and technical competencies for IT positions."
+						"description": "Generate resume analysis using Anthropic's Claude AI model specifically. Returns AI-generated insights highlighting strengths and technical competencies for IT positions."
 					},
 					"response": []
 				}
 			],
-			"description": "Endpoints for AI-powered resume analysis using different models"
+			"description": "🔥 Enhanced AI-powered resume analysis with Application Service architecture. Features smart provider selection, improved error handling, and async support."
+		},
+		{
+			"name": "AI Provider Management",
+			"item": [
+				{
+					"name": "Get System Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ai/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ai",
+								"status"
+							]
+						},
+						"description": "🆕 Get comprehensive status of all AI providers including availability, preferred provider, and system health."
+					},
+					"response": []
+				},
+				{
+					"name": "List Available Providers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ai/providers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ai",
+								"providers"
+							]
+						},
+						"description": "🆕 Get list of currently available AI providers (Claude, Gemini) that are ready to process requests."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Preferred Provider",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ai/preferred",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ai",
+								"preferred"
+							]
+						},
+						"description": "🆕 Get the system's preferred AI provider based on availability and priority (Claude > Gemini)."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Provider Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ai/providers/{{providerName}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ai",
+								"providers",
+								"{{providerName}}",
+								"status"
+							]
+						},
+						"description": "🆕 Check availability status of a specific provider. Use 'Claude' or 'Gemini' as providerName."
+					},
+					"response": []
+				}
+			],
+			"description": "🆕 NEW: AI Provider management endpoints for monitoring system health and provider availability."
 		},
 		{
 			"name": "Web Interface",
@@ -250,6 +367,12 @@
 			"value": "resume.pdf",
 			"type": "string",
 			"description": "Nome do arquivo do currículo para ser usado nos endpoints"
+		},
+		{
+			"key": "providerName",
+			"value": "Claude",
+			"type": "string",
+			"description": "Nome do provedor de IA (Claude ou Gemini) para endpoints específicos"
 		}
 	]
 }

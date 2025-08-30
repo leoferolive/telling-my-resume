@@ -1,24 +1,13 @@
 package com.tellingmyresume.controller;
 
-import java.io.IOException;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
+import com.tellingmyresume.dto.request.ResumeUploadRequest;
+import com.tellingmyresume.dto.response.ResumeAnalysisResponse;
+import com.tellingmyresume.dto.response.ResumeContentResponse;
+import com.tellingmyresume.dto.response.ResumeUploadResponse;
+import com.tellingmyresume.exception.AIServiceException;
 import com.tellingmyresume.exception.ResumeNotFoundException;
 import com.tellingmyresume.exception.ResumeStorageException;
-import com.tellingmyresume.service.ClaudeService;
-import com.tellingmyresume.service.GeminiService;
-import com.tellingmyresume.service.ResumeService;
-
+import com.tellingmyresume.service.ResumeAnalysisService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,19 +15,22 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/resume")
+@Validated
 public class ResumeController {
 
-    private final ResumeService resumeService;
-    private final GeminiService geminiService;
-    private final ClaudeService claudeService;
+    private final ResumeAnalysisService resumeAnalysisService;
     
-    public ResumeController(ResumeService resumeService, GeminiService geminiService, ClaudeService claudeService) {
-        this.resumeService = resumeService;
-        this.geminiService = geminiService;
-        this.claudeService = claudeService;
+    public ResumeController(ResumeAnalysisService resumeAnalysisService) {
+        this.resumeAnalysisService = resumeAnalysisService;
     }
     
     @Operation(
@@ -51,12 +43,16 @@ public class ResumeController {
     	    }
     	)
 	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<String> uploadResume(@RequestPart("file") final MultipartFile file) {
+	public ResponseEntity<ResumeUploadResponse> uploadResume(@Valid ResumeUploadRequest request) {
 	    try {
-	        resumeService.saveResume(file.getOriginalFilename(), file);
-	        return ResponseEntity.ok("Arquivo enviado com sucesso!");
+	        ResumeUploadResponse response = resumeAnalysisService.uploadResume(request);
+	        return ResponseEntity.ok(response);
 	    } catch (ResumeStorageException e) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar o arquivo: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(new ResumeUploadResponse(
+	                request.getFile().getOriginalFilename(),
+	                "Erro ao salvar o arquivo: " + e.getMessage()
+	            ));
 	    }
 	}
     
@@ -67,13 +63,13 @@ public class ResumeController {
         @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
     })
     @GetMapping("/read/{fileName}")
-    public ResponseEntity<String> readResume(@Parameter(description = "Nome do arquivo do currículo") 
-                                             @PathVariable String fileName) throws IOException {
+    public ResponseEntity<ResumeContentResponse> readResume(@Parameter(description = "Nome do arquivo do currículo") 
+                                             @PathVariable String fileName) {
         try {
-            String resumeContent = resumeService.readResume(fileName);
-            return ResponseEntity.status(HttpStatus.OK).body(resumeContent);
+            ResumeContentResponse response = resumeAnalysisService.getResumeContent(fileName);
+            return ResponseEntity.ok(response);
         } catch (ResumeNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Currículo não encontrado: " + fileName);
+            throw e; // Let GlobalExceptionHandler handle this
         }
     }
 
@@ -84,18 +80,10 @@ public class ResumeController {
         @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
     })
     @GetMapping("/generate/{fileName}")
-    public ResponseEntity<String> generateResume(@Parameter(description = "Nome do arquivo do currículo") 
-	@PathVariable String fileName) {
-		try {
-			String resumeContent = resumeService.readResume(fileName);
-			String generatedResume = geminiService.generateResume(resumeContent);
-			return ResponseEntity.status(HttpStatus.OK).body(generatedResume);
-		} catch (ResumeNotFoundException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Currículo não encontrado: " + fileName);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Erro ao gerar o currículo: " + e.getMessage());
-		}
+    public ResponseEntity<ResumeAnalysisResponse> generateResume(@Parameter(description = "Nome do arquivo do currículo") 
+	@PathVariable String fileName) throws ResumeNotFoundException, AIServiceException {
+		ResumeAnalysisResponse response = resumeAnalysisService.analyzeResumeWithProvider(fileName, "Gemini");
+		return ResponseEntity.ok(response);
 	}
     
     @Operation(summary = "Gera um novo resumo do currículo usando o Claude", description = "Gera uma nova versão de um currículo utilizando o modelo Claude")
@@ -105,18 +93,26 @@ public class ResumeController {
         @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
     })
     @GetMapping("/generateClaude/{fileName}")
-    public ResponseEntity<String> generateResumeWithClaude(@Parameter(description = "Nome do arquivo do currículo") 
-                                                           @PathVariable String fileName) {
-        try {
-            String resumeContent = resumeService.readResume(fileName);
-            String generatedResume = claudeService.generateResume(resumeContent);
-            return ResponseEntity.status(HttpStatus.OK).body(generatedResume);
-        } catch (ResumeNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Currículo não encontrado: " + fileName);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao gerar o resumo com Claude: " + e.getMessage());
-        }
+    public ResponseEntity<ResumeAnalysisResponse> generateResumeWithClaude(@Parameter(description = "Nome do arquivo do currículo") 
+                                                           @PathVariable String fileName) 
+            throws ResumeNotFoundException, AIServiceException {
+        ResumeAnalysisResponse response = resumeAnalysisService.analyzeResumeWithProvider(fileName, "Claude");
+        return ResponseEntity.ok(response);
+    }
+    
+    @Operation(summary = "Analisa currículo com melhor provedor disponível", 
+               description = "Analisa o currículo usando o melhor provedor de IA disponível")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Análise gerada com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Currículo não encontrado"),
+        @ApiResponse(responseCode = "503", description = "Nenhum serviço de IA disponível")
+    })
+    @GetMapping("/analyze/{fileName}")
+    public ResponseEntity<ResumeAnalysisResponse> analyzeResumeWithBestProvider(
+            @Parameter(description = "Nome do arquivo do currículo") 
+            @PathVariable String fileName) throws ResumeNotFoundException, AIServiceException {
+        ResumeAnalysisResponse response = resumeAnalysisService.analyzeResumeWithBestAvailable(fileName);
+        return ResponseEntity.ok(response);
     }
     
 }

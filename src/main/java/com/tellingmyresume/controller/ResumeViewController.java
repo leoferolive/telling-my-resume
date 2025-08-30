@@ -1,33 +1,32 @@
 package com.tellingmyresume.controller;
 
-import java.io.IOException;
-import java.util.Arrays;
-
+import com.tellingmyresume.dto.ResumeViewData;
+import com.tellingmyresume.dto.response.ResumeAnalysisResponse;
+import com.tellingmyresume.exception.AIServiceException;
+import com.tellingmyresume.exception.ResumeNotFoundException;
+import com.tellingmyresume.formatter.ResumeFormatter;
+import com.tellingmyresume.service.ResumeAnalysisService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.tellingmyresume.formatter.ResumeFormatter;
-import com.tellingmyresume.service.GeminiService;
-import com.tellingmyresume.service.ResumeService;
-import com.tellingmyresume.vo.ResumeViewData;
+import java.util.Arrays;
 
 @Controller
 @RequestMapping("/resume")
 public class ResumeViewController {
 
-    private final ResumeService resumeService;
-    private final GeminiService geminiService;
+    private final ResumeAnalysisService resumeAnalysisService;
 
-    public ResumeViewController(ResumeService resumeService, GeminiService geminiService) {
-        this.resumeService = resumeService;
-        this.geminiService = geminiService;
+    public ResumeViewController(ResumeAnalysisService resumeAnalysisService) {
+        this.resumeAnalysisService = resumeAnalysisService;
     }
 
     @GetMapping("/view/{fileName}")
-    public String viewResume(@PathVariable String fileName, Model model) throws IOException {
+    public String viewResume(@PathVariable String fileName, Model model) 
+            throws ResumeNotFoundException, AIServiceException {
 
         ResumeViewData data = prepareResumeData(fileName);
 
@@ -41,10 +40,9 @@ public class ResumeViewController {
         return "resumeView";
     }
 
-    private ResumeViewData prepareResumeData(String fileName) throws IOException {
-        String resumeContent = resumeService.readResume(fileName);
-        String generatedResume = geminiService.generateResume(resumeContent);
-        String formattedResume = ResumeFormatter.formatResume(generatedResume);
+    private ResumeViewData prepareResumeData(String fileName) throws ResumeNotFoundException, AIServiceException {
+        ResumeAnalysisResponse analysisResponse = resumeAnalysisService.analyzeResumeWithBestAvailable(fileName);
+        String formattedResume = ResumeFormatter.formatResume(analysisResponse.getAnalysis());
 
         return new ResumeViewData(formattedResume);
     }

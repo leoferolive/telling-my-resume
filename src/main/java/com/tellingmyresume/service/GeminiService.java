@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,23 +13,23 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.tellingmyresume.constants.ApiConstants;
+import com.tellingmyresume.constants.ErrorMessages;
 import com.tellingmyresume.exception.GeminiServiceException;
-import com.tellingmyresume.formatter.ResumeFormatter;
-import com.tellingmyresume.vo.Candidate;
-import com.tellingmyresume.vo.GeminiResponseVO;
+import com.tellingmyresume.dto.response.Candidate;
+import com.tellingmyresume.dto.response.GeminiResponseVO;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
 @Service
-public class GeminiService {
+public class GeminiService implements AIAnalysisService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GeminiService.class);
-
-    private static final String GEMINI_URL_TEMPLATE = 
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=";
 
     @Value("${api.gemini.key}")
     private String apiKey;
@@ -40,25 +41,19 @@ public class GeminiService {
     }
 
     /**
-     * Gera um currículo formatado como JSON com caracteres especiais limpos.
-     * 
-     * @param resumeContent O conteúdo do currículo a ser processado.
-     * @return O currículo formatado como JSON, com caracteres especiais limpos.
-     */
-    public String generateResumeAsJson(String resumeContent) {
-        return ResumeFormatter.cleanSpecialCharacters(generateResume(resumeContent));
-    }
-
-    /**
      * Gera o resumo do currículo formatado através da API Gemini.
      * Adicionamos lógica de Retry para tentar várias vezes em caso de falhas.
      * 
      * @param resumeContent O conteúdo do currículo.
      * @return O resumo do currículo processado pela API Gemini.
      */
+    @Override
     @Retry(name = "geminiService", fallbackMethod = "fallbackGenerateResume")
-    public String generateResume(String resumeContent) {
-        String url = GEMINI_URL_TEMPLATE + apiKey;
+    public String generateResume(String resumeContent) throws GeminiServiceException {
+        if (resumeContent == null || resumeContent.trim().isEmpty()) {
+            throw new GeminiServiceException("Conteúdo do currículo não pode estar vazio");
+        }
+        String url = ApiConstants.GEMINI_BASE_URL + apiKey;
 
         HttpEntity<Map<String, Object>> entity = createHttpEntity(resumeContent);
 
@@ -66,14 +61,17 @@ public class GeminiService {
             ResponseEntity<GeminiResponseVO> response = restTemplate.exchange(url, HttpMethod.POST, entity, GeminiResponseVO.class);
 
             return extractCandidateText(response)
-                    .orElseThrow(() -> new GeminiServiceException("A resposta da API do Gemini não contém dados suficientes."));
+                    .orElseThrow(() -> new GeminiServiceException(ErrorMessages.GEMINI_INSUFFICIENT_DATA));
 
         } catch (GeminiServiceException e) {
             LOGGER.error("Erro específico da API Gemini: {}", e.getMessage());
             throw e;
+        } catch (RestClientException e) {
+            LOGGER.error("Erro de conectividade com a API do Gemini: {}", e.getMessage(), e);
+            throw new GeminiServiceException("Erro de conectividade com o serviço Gemini: " + e.getMessage(), e);
         } catch (Exception e) {
             LOGGER.error("Erro inesperado ao chamar a API do Gemini: {}", e.getMessage(), e);
-            throw new GeminiServiceException("Erro ao gerar o currículo na API do Gemini.", e);
+            throw new GeminiServiceException(ErrorMessages.GEMINI_API_ERROR, e);
         }
     }
 
@@ -86,7 +84,7 @@ public class GeminiService {
      */
     public String fallbackGenerateResume(String resumeContent, Exception ex) {
         LOGGER.error("Falha ao gerar currículo pela API do Gemini. Executando fallback. Motivo: {}", ex.getMessage());
-        return "Não foi possível gerar o resumo no momento. Tente novamente mais tarde.";
+        return ErrorMessages.GEMINI_FALLBACK_MESSAGE;
     }
 
     /**
@@ -99,7 +97,7 @@ public class GeminiService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("contents", List.of(
             Map.of("parts", List.of(
-                Map.of("text", "Descreva o currículo a seguir para uma oferta de trabalho de maneira a valorizar o mesmo: " + resumeContent)
+                Map.of("text", ApiConstants.GEMINI_PROMPT_TEMPLATE + resumeContent)
             ))
         ));
 
@@ -122,5 +120,33 @@ public class GeminiService {
                 .map(Candidate::getContent)
                 .flatMap(content -> content.getParts().stream().findFirst())
                 .map(part -> part.getText());
+    }
+
+    @Override
+    @Async
+    public CompletableFuture<String> generateResumeAsync(String resumeContent) {
+        try {
+            String result = generateResume(resumeContent);
+            return CompletableFuture.completedFuture(result);
+        } catch (Exception e) {
+            CompletableFuture<String> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
+    }
+
+    @Override
+    public String getProviderName() {
+        return "Gemini";
+    }
+
+    @Override
+    public boolean isServiceAvailable() {
+        try {
+            return restTemplate != null && apiKey != null && !apiKey.equals("demo-key");
+        } catch (Exception e) {
+            LOGGER.warn("Falha ao verificar disponibilidade do serviço Gemini: {}", e.getMessage());
+            return false;
+        }
     }
 }

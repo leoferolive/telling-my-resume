@@ -1,10 +1,17 @@
-# 📮 Postman Collection - Telling My Resume API
+# 📮 Postman Collection - Telling My Resume API v2.0
 
-Esta pasta contém a collection do Postman para testar todos os endpoints da aplicação **Telling My Resume**.
+Esta pasta contém a collection do Postman para testar todos os endpoints da aplicação **Telling My Resume** com a nova arquitetura de **Application Services** (Phase 3 completa).
+
+## 🆕 **Novidades da v2.0**
+- ✨ **Smart Analysis** - Endpoint inteligente que seleciona automaticamente o melhor provedor de IA
+- 🔍 **AI Provider Management** - Monitoramento e status dos provedores de IA
+- 🏗️ **Application Services** - Arquitetura refatorada com camada de orquestração
+- 🚀 **Melhor tratamento de erros** e fallbacks automáticos
+- 📊 **Endpoints de monitoramento** para health check dos serviços
 
 ## 📁 Arquivos
 
-- `Telling_My_Resume.postman_collection.json` - Collection principal com todos os endpoints
+- `Telling_My_Resume.postman_collection.json` - Collection v2.0 com endpoints da nova arquitetura
 
 ## 🚀 Como Importar a Collection
 
@@ -23,13 +30,14 @@ Esta pasta contém a collection do Postman para testar todos os endpoints da apl
 ## 🔧 Configuração Inicial
 
 ### 1. Variáveis de Ambiente
-Antes de usar os endpoints de IA, configure a seguinte variável de ambiente:
+Para usar todos os recursos de IA, configure as seguintes variáveis de ambiente:
 
 ```
 API_GEMINI_KEY = sua-chave-do-gemini
+API_CLAUDE_KEY = sua-chave-do-claude
 ```
 
-**Nota**: O endpoint do Claude está temporariamente desabilitado devido à limitação de créditos.
+**🔥 Nova funcionalidade**: O sistema agora possui **Smart Analysis** que automaticamente usa o melhor provedor disponível, com fallback inteligente entre Claude e Gemini.
 
 **Como configurar:**
 1. Clique no ícone de "olho" 👁️ no canto superior direito
@@ -52,14 +60,23 @@ A aplicação estará disponível em `http://localhost:8080`
 ### 🗂️ **Resume Management**
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| POST | `/resume/upload` | Upload de currículo (PDF, DOCX, TXT) |
-| GET | `/resume/read/{fileName}` | Lê conteúdo bruto do arquivo |
+| POST | `/resume/upload` | Upload de currículo (PDF, DOCX, TXT) com validação |
+| GET | `/resume/read/{fileName}` | Lê conteúdo processado do arquivo |
 
-### 🤖 **AI Analysis**
+### 🤖 **AI Analysis** 
 | Método | Endpoint | Descrição | Status |
 |--------|----------|-----------|--------|
-| GET | `/resume/generate/{fileName}` | Análise com Gemini AI | ✅ Ativo |
-| GET | `/resume/generateClaude/{fileName}` | Análise com Claude AI | ❌ Desabilitado |
+| GET | `/resume/analyze/{fileName}` | 🆕 **Smart Analysis** (melhor provedor) | ✅ Recomendado |
+| GET | `/resume/generate/{fileName}` | Análise específica com Gemini AI | ✅ Ativo |
+| GET | `/resume/generateClaude/{fileName}` | Análise específica com Claude AI | ✅ Ativo |
+
+### 🔍 **AI Provider Management** (🆕)
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/ai/status` | Status completo do sistema de IA |
+| GET | `/ai/providers` | Lista provedores disponíveis |
+| GET | `/ai/preferred` | Provedor preferido atual |
+| GET | `/ai/providers/{provider}/status` | Status de provedor específico |
 
 ### 🌐 **Web Interface**
 | Método | Endpoint | Descrição |
@@ -76,38 +93,54 @@ A aplicação estará disponível em `http://localhost:8080`
 
 ## 🧪 Fluxo de Teste Recomendado
 
-### 1. **Upload de Currículo**
+### 🆕 **Novo Fluxo Inteligente (Recomendado)**
+
+### 1. **Verificar Status do Sistema**
+```
+GET /ai/status
+- Verifica quais provedores estão disponíveis
+- Mostra provedor preferido atual
+```
+
+### 2. **Upload de Currículo**
 ```
 POST /resume/upload
 - Body: form-data
-- Key: file
-- Value: Selecione um arquivo PDF, DOCX ou TXT
+- Key: file (obrigatório)
+- Key: customFileName (opcional)
+- Validação automática de tipo e tamanho
 ```
 
-### 2. **Verificar Conteúdo**
+### 3. **Smart Analysis (🔥 Novo)**
 ```
-GET /resume/read/nome-do-arquivo.pdf
-- Substitua 'nome-do-arquivo.pdf' pelo nome real do arquivo
+GET /resume/analyze/nome-do-arquivo.pdf
+- ✨ Usa automaticamente o melhor provedor disponível
+- ✨ Fallback inteligente se um provedor falhar
+- ✅ RECOMENDADO para uso em produção
 ```
-
-### 3. **Gerar Análise com IA**
-```
-GET /resume/generate/nome-do-arquivo.pdf        (Gemini - Ativo)
-```
-**Nota**: Endpoint do Claude temporariamente indisponível.
 
 ### 4. **Visualizar Resultado Formatado**
 ```
 GET /resume/view/nome-do-arquivo.pdf
-- Retorna HTML formatado para visualização
+- Usa Smart Analysis internamente
+- Retorna HTML formatado com melhor análise disponível
+```
+
+### **Fluxo Clássico (Específico por Provedor)**
+
+### 3a. **Análise Específica**
+```
+GET /resume/generate/nome-do-arquivo.pdf        (Gemini específico)
+GET /resume/generateClaude/nome-do-arquivo.pdf  (Claude específico)
 ```
 
 ## 🔧 Variáveis da Collection
 
-A collection já vem com as seguintes variáveis pré-configuradas:
+A collection v2.0 já vem com as seguintes variáveis pré-configuradas:
 
 - `baseUrl`: `http://localhost:8080`
 - `fileName`: `resume.pdf` (exemplo - substitua pelo nome real do arquivo)
+- `providerName`: `Claude` (🆕 para endpoints específicos de provedor)
 
 **Para alterar as variáveis:**
 1. Clique com botão direito na collection
@@ -139,10 +172,22 @@ Você pode testar com diferentes tipos de arquivo:
 - Verifique se o arquivo foi enviado com sucesso
 - Confirme o nome exato do arquivo na variável `fileName`
 
+### Erro 503 - Serviço Indisponível
+- 🆕 **Nenhum provedor de IA disponível**: Verifique `/ai/status`
+- Configure pelo menos uma chave de API (Gemini ou Claude)
+- Use o endpoint `/ai/preferred` para ver qual provedor está ativo
+
 ### Erro 500 - Erro interno do servidor
 - Verifique se as chaves de API estão configuradas corretamente
 - Confirme se a aplicação está rodando
-- Verifique os logs da aplicação
+- Use `/ai/status` para diagnosticar problemas de IA
+
+### 🆕 **Debugging com Novos Endpoints**
+```
+GET /ai/status           - Status completo do sistema
+GET /ai/providers        - Lista provedores ativos
+GET /ai/preferred        - Provedor preferido atual
+```
 
 ### Rate Limiting
 - A aplicação tem rate limiting implementado
@@ -157,4 +202,24 @@ Para problemas ou dúvidas:
 
 ---
 
-**✨ Pronto para usar! Importe a collection e comece a testar sua API de análise de currículos com IA.**
+## 🚀 **Arquitetura v2.0 - Application Services**
+
+A collection v2.0 reflete a nova arquitetura implementada:
+
+```
+Controllers → Application Services → Domain Services → Infrastructure
+     ↓              ↓                      ↓              ↓
+ResumeController  ResumeAnalysisService  ResumeService  StorageService
+AIProviderController  AIProviderService   AIAnalysisService  DatabaseStorageService
+```
+
+### ✨ **Benefícios da Nova Arquitetura**
+- **🤖 Smart Analysis**: Seleção automática do melhor provedor
+- **🔄 Fallback Inteligente**: Se um provedor falha, usa outro automaticamente  
+- **📊 Monitoramento**: Endpoints para verificar health dos serviços
+- **🏗️ Escalabilidade**: Fácil adição de novos provedores de IA
+- **🛡️ Robustez**: Melhor tratamento de erros e exceções
+
+---
+
+**🔥 Nova experiência! Importe a collection v2.0 e descubra os recursos avançados da arquitetura Application Services.**

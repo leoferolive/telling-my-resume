@@ -1,35 +1,30 @@
 package com.tellingmyresume.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
+import com.tellingmyresume.exception.InvalidResumeException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Component;
 
-import com.tellingmyresume.exception.InvalidResumeException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 @Component
 public class FileUtils {
     
     public String extractText(String fileName, byte[] content) throws IOException {
         String extension = getFileExtension(fileName);
-        
-        switch (extension.toLowerCase()) {
-            case "txt":
-                return new String(content);
-            case "pdf":
-                return extractPdfText(content);
-            case "docx":
-                return extractDocxText(content);
-            default:
-                throw new InvalidResumeException("Formato de arquivo não suportado: " + extension);
-        }
+
+        return switch (extension.toLowerCase()) {
+            case "txt" -> new String(content);
+            case "pdf" -> extractPdfText(content);
+            case "docx" -> extractDocxText(content);
+            default -> throw new InvalidResumeException("Formato de arquivo não suportado: " + extension);
+        };
     }
     
-    private String extractPdfText(byte[] content) throws IOException {
+    private String extractPdfText(byte[] content) {
         try (PDDocument document = PDDocument.load(content)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
@@ -38,7 +33,7 @@ public class FileUtils {
         }
     }
     
-    private String extractDocxText(byte[] content) throws IOException {
+    private String extractDocxText(byte[] content) {
         try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(content));
              XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
             return extractor.getText();

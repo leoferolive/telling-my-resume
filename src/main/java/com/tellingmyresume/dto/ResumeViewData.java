@@ -1,4 +1,4 @@
-package com.tellingmyresume.vo;
+package com.tellingmyresume.dto;
 
 public class ResumeViewData {
 
