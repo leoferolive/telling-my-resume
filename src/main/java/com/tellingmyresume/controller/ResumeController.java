@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/resume")
 @Validated
+@Tag(name = "Resume API (Legacy)", description = "API legada para análise de currículos - mantida para compatibilidade")
 public class ResumeController {
 
     private final ResumeAnalysisService resumeAnalysisService;
@@ -34,24 +36,45 @@ public class ResumeController {
     }
     
     @Operation(
-    	    summary = "Upload de um arquivo de currículo (PDF, DOCX ou TXT)",
-    	    description = "Envia um arquivo de currículo para ser salvo no servidor. O arquivo pode estar nos formatos PDF, DOCX ou TXT.",
-    	    requestBody = @RequestBody(),
-    	    responses = {
-    	        @ApiResponse(responseCode = "200", description = "Arquivo enviado com sucesso"),
-    	        @ApiResponse(responseCode = "500", description = "Erro ao salvar o arquivo")
-    	    }
-    	)
+        summary = "Upload de arquivo de currículo (LEGACY)",
+        description = "⚠️ DESCONTINUADO: Use /api/v1/resume/upload. Envia um arquivo de currículo (PDF, DOCX ou TXT) para análise posterior",
+        requestBody = @RequestBody(
+            description = "Arquivo de currículo e metadados opcionais",
+            required = true
+        )
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Upload realizado com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = "{\"fileName\":\"curriculum.pdf\",\"message\":\"Upload successful\",\"fileSize\":1024}")
+            )
+        ),
+        @ApiResponse(responseCode = "400", description = "Arquivo inválido ou dados malformados"),
+        @ApiResponse(responseCode = "413", description = "Arquivo muito grande (máx 10MB)"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
 	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResumeUploadResponse> uploadResume(@Valid ResumeUploadRequest request) {
 	    ResumeUploadResponse response = resumeAnalysisService.uploadResume(request);
 	    return ResponseEntity.ok(response);
 	}
     
-    @Operation(summary = "Lê um currículo", description = "Lê o conteúdo de um currículo salvo no servidor")
+    @Operation(
+        summary = "Obter conteúdo do currículo (LEGACY)",
+        description = "⚠️ DESCONTINUADO: Use /api/v1/resume/content/{fileName}. Recupera o conteúdo textual extraído de um currículo previamente enviado"
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Currículo lido com sucesso",
-                     content = @Content(examples = @ExampleObject(value = "{\"mensagem\": \"Currículo lido com sucesso!\", \"data\": \"...conteúdo do currículo...\"}"))),
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Conteúdo recuperado com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = "{\"fileName\":\"curriculum.pdf\",\"content\":\"João Silva\\nDesenvolvedor Java...\",\"contentType\":\"text/plain\"}")
+            )
+        ),
         @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
     })
     @GetMapping("/read/{fileName}")
@@ -61,44 +84,60 @@ public class ResumeController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Gera um novo resumo do currículo", description = "Gera uma nova versão de um currículo utilizando a API do Gemini")
+    @Operation(
+        summary = "Análise com Gemini (LEGACY)",
+        description = "⚠️ DESCONTINUADO: Use /api/v1/resume/analyze/{fileName}/provider/Gemini. Força a análise usando especificamente o provedor Gemini"
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Currículo gerado com sucesso",
-                     content = @Content(examples = @ExampleObject(value = "{\"mensagem\": \"Currículo gerado com sucesso!\"}"))),
-        @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
+        @ApiResponse(responseCode = "200", description = "Análise gerada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Provedor não suportado"),
+        @ApiResponse(responseCode = "404", description = "Currículo não encontrado"),
+        @ApiResponse(responseCode = "503", description = "Provedor Gemini indisponível")
     })
     @GetMapping("/generate/{fileName}")
     public ResponseEntity<ResumeAnalysisResponse> generateResume(@Parameter(description = "Nome do arquivo do currículo") 
-	@PathVariable String fileName) throws ResumeNotFoundException, AIServiceException {
+	@PathVariable String fileName) {
 		ResumeAnalysisResponse response = resumeAnalysisService.analyzeResumeWithProvider(fileName, "Gemini");
 		return ResponseEntity.ok(response);
 	}
     
-    @Operation(summary = "Gera um novo resumo do currículo usando o Claude", description = "Gera uma nova versão de um currículo utilizando o modelo Claude")
+    @Operation(
+        summary = "Análise com Claude (LEGACY)",
+        description = "⚠️ DESCONTINUADO: Use /api/v1/resume/analyze/{fileName}/provider/Claude. Força a análise usando especificamente o provedor Claude"
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Resumo gerado com sucesso",
-                     content = @Content(examples = @ExampleObject(value = "{\"mensagem\": \"Resumo gerado com sucesso!\"}"))),
-        @ApiResponse(responseCode = "404", description = "Currículo não encontrado")
+        @ApiResponse(responseCode = "200", description = "Análise gerada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Provedor não suportado"), 
+        @ApiResponse(responseCode = "404", description = "Currículo não encontrado"),
+        @ApiResponse(responseCode = "503", description = "Provedor Claude indisponível")
     })
     @GetMapping("/generateClaude/{fileName}")
     public ResponseEntity<ResumeAnalysisResponse> generateResumeWithClaude(@Parameter(description = "Nome do arquivo do currículo") 
-                                                           @PathVariable String fileName) 
-            throws ResumeNotFoundException, AIServiceException {
+                                                           @PathVariable String fileName) {
         ResumeAnalysisResponse response = resumeAnalysisService.analyzeResumeWithProvider(fileName, "Claude");
         return ResponseEntity.ok(response);
     }
     
-    @Operation(summary = "Analisa currículo com melhor provedor disponível", 
-               description = "Analisa o currículo usando o melhor provedor de IA disponível")
+    @Operation(
+        summary = "Análise inteligente de currículo (LEGACY)", 
+        description = "⚠️ DESCONTINUADO: Use /api/v1/resume/analyze/{fileName}. Analisa o currículo usando o melhor provedor de IA disponível com fallback automático"
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Análise gerada com sucesso"),
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Análise gerada com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = "{\"fileName\":\"curriculum.pdf\",\"analysis\":\"Profissional com sólida experiência...\",\"aiProvider\":\"Claude\",\"timestamp\":\"2025-08-30T04:40:00Z\"}")
+            )
+        ),
         @ApiResponse(responseCode = "404", description = "Currículo não encontrado"),
         @ApiResponse(responseCode = "503", description = "Nenhum serviço de IA disponível")
     })
     @GetMapping("/analyze/{fileName}")
     public ResponseEntity<ResumeAnalysisResponse> analyzeResumeWithBestProvider(
             @Parameter(description = "Nome do arquivo do currículo") 
-            @PathVariable String fileName) throws ResumeNotFoundException, AIServiceException {
+            @PathVariable String fileName) {
         ResumeAnalysisResponse response = resumeAnalysisService.analyzeResumeWithBestAvailable(fileName);
         return ResponseEntity.ok(response);
     }
