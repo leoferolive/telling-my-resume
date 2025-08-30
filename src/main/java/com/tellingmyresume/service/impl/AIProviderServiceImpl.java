@@ -69,6 +69,9 @@ public class AIProviderServiceImpl implements AIProviderService {
 
     @Override
     public boolean isProviderAvailable(String providerName) {
+        if (providerName == null) {
+            return false;
+        }
         AIAnalysisService service = providerMap.get(providerName);
         return service != null && service.isServiceAvailable();
     }

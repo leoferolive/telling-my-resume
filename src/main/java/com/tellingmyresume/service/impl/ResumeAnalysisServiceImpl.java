@@ -17,25 +17,25 @@ import com.tellingmyresume.exception.AIServiceException;
 import com.tellingmyresume.exception.GenericAIServiceException;
 import com.tellingmyresume.exception.ResumeNotFoundException;
 import com.tellingmyresume.exception.ResumeStorageException;
-import com.tellingmyresume.mapper.ResumeMapper;
+import com.tellingmyresume.mapper.ResumeMapperInterface;
 import com.tellingmyresume.service.AIAnalysisService;
 import com.tellingmyresume.service.ResumeAnalysisService;
-import com.tellingmyresume.service.ResumeService;
+import com.tellingmyresume.service.ResumeDataService;
 
 @Service
 public class ResumeAnalysisServiceImpl implements ResumeAnalysisService {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ResumeAnalysisServiceImpl.class);
     
-    private final ResumeService resumeService;
+    private final ResumeDataService resumeService;
     private final AIAnalysisService claudeService;
     private final AIAnalysisService geminiService;
-    private final ResumeMapper resumeMapper;
+    private final ResumeMapperInterface resumeMapper;
     
-    public ResumeAnalysisServiceImpl(ResumeService resumeService,
+    public ResumeAnalysisServiceImpl(ResumeDataService resumeService,
                                    @Qualifier("claudeService") AIAnalysisService claudeService,
                                    @Qualifier("geminiService") AIAnalysisService geminiService,
-                                   ResumeMapper resumeMapper) {
+                                   ResumeMapperInterface resumeMapper) {
         this.resumeService = resumeService;
         this.claudeService = claudeService;
         this.geminiService = geminiService;

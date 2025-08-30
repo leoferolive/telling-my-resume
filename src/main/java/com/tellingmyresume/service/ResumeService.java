@@ -9,7 +9,7 @@ import com.tellingmyresume.exception.StorageException;
 import com.tellingmyresume.util.FileUtils;
 
 @Service
-public class ResumeService {
+public class ResumeService implements ResumeDataService {
     
     private final StorageService storageService;
     private final FileUtils fileUtils;

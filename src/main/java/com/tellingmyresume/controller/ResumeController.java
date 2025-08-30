@@ -44,16 +44,8 @@ public class ResumeController {
     	)
 	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResumeUploadResponse> uploadResume(@Valid ResumeUploadRequest request) {
-	    try {
-	        ResumeUploadResponse response = resumeAnalysisService.uploadResume(request);
-	        return ResponseEntity.ok(response);
-	    } catch (ResumeStorageException e) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	            .body(new ResumeUploadResponse(
-	                request.getFile().getOriginalFilename(),
-	                "Erro ao salvar o arquivo: " + e.getMessage()
-	            ));
-	    }
+	    ResumeUploadResponse response = resumeAnalysisService.uploadResume(request);
+	    return ResponseEntity.ok(response);
 	}
     
     @Operation(summary = "Lê um currículo", description = "Lê o conteúdo de um currículo salvo no servidor")
@@ -65,12 +57,8 @@ public class ResumeController {
     @GetMapping("/read/{fileName}")
     public ResponseEntity<ResumeContentResponse> readResume(@Parameter(description = "Nome do arquivo do currículo") 
                                              @PathVariable String fileName) {
-        try {
-            ResumeContentResponse response = resumeAnalysisService.getResumeContent(fileName);
-            return ResponseEntity.ok(response);
-        } catch (ResumeNotFoundException e) {
-            throw e; // Let GlobalExceptionHandler handle this
-        }
+        ResumeContentResponse response = resumeAnalysisService.getResumeContent(fileName);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Gera um novo resumo do currículo", description = "Gera uma nova versão de um currículo utilizando a API do Gemini")

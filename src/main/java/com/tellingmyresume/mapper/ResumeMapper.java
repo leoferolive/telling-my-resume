@@ -11,7 +11,7 @@ import com.tellingmyresume.model.Resume;
 import com.tellingmyresume.util.FileNameSanitizer;
 
 @Component
-public class ResumeMapper {
+public class ResumeMapper implements ResumeMapperInterface {
 
     public ResumeUploadResponse toUploadResponse(String fileName, MultipartFile file) {
         String sanitizedFileName = FileNameSanitizer.sanitize(fileName);
