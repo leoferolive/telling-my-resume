@@ -11,6 +11,7 @@ public class ErrorResponse {
     private String path;
     private int status;
     private LocalDateTime timestamp;
+    private String correlationId;
 
     public ErrorResponse() {
         this.timestamp = LocalDateTime.now();
@@ -79,5 +80,13 @@ public class ErrorResponse {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 }

@@ -1,15 +1,15 @@
 package com.tellingmyresume.exception;
 
-public class ResumeStorageException extends RuntimeException {
+import com.tellingmyresume.constants.ErrorCodes;
+import org.springframework.http.HttpStatus;
 
-	private static final long serialVersionUID = 5802486019003212938L;
+public class ResumeStorageException extends StorageBusinessException {
 
 	public ResumeStorageException(String message) {
-        super(message);
+        super(message, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.STORAGE_SAVE_ERROR);
     }
 
     public ResumeStorageException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, cause, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.STORAGE_SAVE_ERROR);
     }
-	
 }

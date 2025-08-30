@@ -25,9 +25,7 @@ public class ResumeViewController {
     }
 
     @GetMapping("/view/{fileName}")
-    public String viewResume(@PathVariable String fileName, Model model) 
-            throws ResumeNotFoundException, AIServiceException {
-
+    public String viewResume(@PathVariable String fileName, Model model) {
         ResumeViewData data = prepareResumeData(fileName);
 
         model.addAttribute("resume", data.getFormattedResume());
@@ -40,7 +38,7 @@ public class ResumeViewController {
         return "resumeView";
     }
 
-    private ResumeViewData prepareResumeData(String fileName) throws ResumeNotFoundException, AIServiceException {
+    private ResumeViewData prepareResumeData(String fileName) {
         ResumeAnalysisResponse analysisResponse = resumeAnalysisService.analyzeResumeWithBestAvailable(fileName);
         String formattedResume = ResumeFormatter.formatResume(analysisResponse.getAnalysis());
 
