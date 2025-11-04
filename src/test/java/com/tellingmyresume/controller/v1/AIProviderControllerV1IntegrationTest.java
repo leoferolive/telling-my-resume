@@ -18,7 +18,10 @@ import com.tellingmyresume.service.AIProviderService;
 
 import static org.mockito.Mockito.when;
 
-@WebMvcTest(AIProviderControllerV1.class)
+@WebMvcTest(
+    controllers = AIProviderControllerV1.class,
+    excludeAutoConfiguration = {com.tellingmyresume.config.WebConfig.class}
+)
 class AIProviderControllerV1IntegrationTest {
 
     @Autowired
@@ -26,12 +29,6 @@ class AIProviderControllerV1IntegrationTest {
 
     @MockBean
     private AIProviderService aiProviderService;
-
-    @MockBean
-    private com.tellingmyresume.interceptor.RateLimitingInterceptor rateLimitingInterceptor;
-
-    @MockBean
-    private com.tellingmyresume.config.CorrelationIdInterceptor correlationIdInterceptor;
 
     @Test
     void testGetAvailableProviders_V1_Success() throws Exception {
