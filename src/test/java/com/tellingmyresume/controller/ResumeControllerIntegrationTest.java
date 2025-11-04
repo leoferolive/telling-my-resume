@@ -32,6 +32,12 @@ class ResumeControllerIntegrationTest {
     @MockBean
     private ResumeAnalysisService resumeAnalysisService;
 
+    @MockBean
+    private com.tellingmyresume.interceptor.RateLimitingInterceptor rateLimitingInterceptor;
+
+    @MockBean
+    private com.tellingmyresume.config.CorrelationIdInterceptor correlationIdInterceptor;
+
     @Test
     void testUploadResume_Success() throws Exception {
         // Arrange
