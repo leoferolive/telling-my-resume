@@ -23,10 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-@WebMvcTest(
-    controllers = ResumeControllerV1.class,
-    excludeAutoConfiguration = {com.tellingmyresume.config.WebConfig.class}
-)
+@WebMvcTest(ResumeControllerV1.class)
 class ResumeControllerV1IntegrationTest {
 
     @Autowired
@@ -34,6 +31,12 @@ class ResumeControllerV1IntegrationTest {
 
     @MockBean
     private ResumeAnalysisService resumeAnalysisService;
+
+    @MockBean
+    private com.tellingmyresume.interceptor.RateLimitingInterceptor rateLimitingInterceptor;
+
+    @MockBean
+    private com.tellingmyresume.config.CorrelationIdInterceptor correlationIdInterceptor;
 
     @Test
     void testUploadResume_V1_Success() throws Exception {

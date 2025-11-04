@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Locale;
 
 @Configuration
-@EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
 
     private final RateLimitingInterceptor rateLimitingInterceptor;
